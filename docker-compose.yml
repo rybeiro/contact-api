@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: Cliente@site2023
+      POSTGRES_USER: ribeiro
+      POSTGRES_DB: contact_api_development
+    ports:
+      - "5434:5432"
+  web:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    volumes:
+      - .:/contact-api
+    environment:
+      DB_PASS: Cliente@site2023
+      DB_USER: ribeiro
+      DB_NAME: contact_api_development
+      DB_HOST: db
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db

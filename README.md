@@ -125,7 +125,98 @@ I18n.default_locale = :'pt-BR'
 # parsear para o idioma padrão
 I18n.l(Date.today)
 
+# traduzir atributos os as_json no Model
+# Model Contact
+# sobrescrita do as_json
+def as_json(options={})
+	h = super(options)
+	h[:birthdate] = I18n.l(self.birthdate)
+end
+
 ```
+
+# has_many
+Estudar _Nested Attributes_ na api.rubyonrails.org
+
+### criar contatos e telefones aninhados
+
+```ruby
+# Possibilita a inclusão dos Phone junto com um Contact
+# Model Contact
+has_many :phones
+accepts_nested_attributes_for :phones
+
+# estrutura de dados para cadastrar os telefones
+# atributo mágico ( nome_associacao_attributes )
+# exemplo: phones_attributes[{}, {}] 
+params = { 
+	"contact": {
+		"name": "Teste",
+		"email": "teste@test.com",
+		"birthdate": "2012-12-12",
+		"kind_id": 2,
+		"phones_attributes": [
+			{ "numer": "999999999"},
+			{ "numer": "888888888"},
+			{ "numer": "777777777"}
+		]
+	}
+}
+
+# Importante: Para associações has_many, ou seja, a tabela que recebe a chave estrangeira, não gerar com scaffold. segue exemplo:
+rails g model Phone number:string
+
+# também permitir o phones_attributes no ContactController no método contact_params
+
+def contact_params
+	params.require(:contact).permit(:name, :email, :birthdate, :kind_id, phones_attributes: [:id, :number])
+end
+```
+
+### atualizar contatos com os telefones aninhados
+Para atualizar um determinado contato com o telefone, deve-se enviar no post o id do phone
+```ruby
+# estrutura necessária
+# PUT => localhost:3000/contacts/1
+params = {
+	"contact": {
+		"name": "João de Tals"
+		"phones_attributes": {
+			"id": 1,
+			"number": "999888777"
+		}
+	}
+}
+
+```
+
+### Apagar um contato com os telefones aninhados
+Incluir _allow_destroy: true_ no Model além utilizar o método update informando o id do phone e o parâmetro \_destroy
+```ruby
+# Model Contact
+has_many :phones
+accepts_nested_attributes_for :phones, allow_destroy: true
+
+
+# Controller Contact
+def contact_params
+	params.require(:contact).permit(:name, :email, :birthdate, :kind_id, phones_attributes: [:id, :number, _destroy])
+end
+
+# estrutura necessária
+# PUT => localhost:3000/contacts/1
+params = {
+	"contact": {
+		"name": "João de Tals"
+		"phones_attributes": {
+			"id": 1,
+			"_destroy": 1
+		}
+	}
+}
+```
+
+
 
 
 

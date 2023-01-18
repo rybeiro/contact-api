@@ -216,11 +216,55 @@ params = {
 }
 ```
 
+# has_one
+Gerar o model address
+```ruby
+# Model Address
+rails g model Address street:string city:string contact:references
 
+# Já devemos ativar o Nested Attributes no Model Contact e incluir o relacionamento
+# Model Contact
+has_one :address
+accepts_nested_attributes_for :address
+```
 
+### Render json do CRUD para o has_one
+#### Read
+Incluir no render json
+```ruby
+render json: @contact, include: [:address]
+```
+#### Create 
+Permitir no controller e no Model permitir na associação optional para possibilitar a inserção.
+```ruby
+# Contact Controller
+def contact_params
+	params.require(:contact).permit(
+		:name,
+		:email,
+		:birthdate,
+		:kind_id,
+		phones_attributes: [
+			:id, :number, :_destroy
+		],
+		address_attributes: [
+			:id, :street, :city
+		]
+	)
+end
 
+# Address Model
+belongs_to :contact, optional: true
+```
 
+# CORS
+Descomentar a gem 'rack-cors' e executar o bundle
 
+Site para fazer teste de cors: resttesttest.com
+
+Acessar o arquivo config/initializer/cors.rb e descomentar.
+
+# AMS - Active Model Serializers
 
 
 

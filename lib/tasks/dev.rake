@@ -1,6 +1,12 @@
 namespace :dev do
   desc "Popula o ambiente de desenvolvimento com dados Fake"
   task setup: :environment do
+    
+    # Executa comando de terminal
+    # %x(rails db:drop db:create db:migrate dev:setup)
+
+    Faker::Config.locale = 'pt-BR'
+
     puts "Cadastrando tipos de contatos...."
     kinds = %w(Amigo Familiar Comercial Outros)
 
@@ -17,7 +23,25 @@ namespace :dev do
         kind: Kind.all.sample
       )
     end
+
+    puts "Cadastrando os telefone ...."
+    Contact.all.each do |contact|
+      Random.rand(5).times do |i|
+        Phone.create!(
+          number: Faker::PhoneNumber.cell_phone,
+          contact: contact
+        )
+      end
+    end
+
+    puts "Cadastrando os endereços"
+    Contact.all.each do |contact|
+      Address.create!(
+        street: Faker::Address.street_address,
+        city: Faker::Address.city,
+        contact: contact
+      )
+    end 
     puts "Processo finalizado com sucesso."
   end
-
 end

@@ -265,6 +265,76 @@ Site para fazer teste de cors: resttesttest.com
 Acessar o arquivo config/initializer/cors.rb e descomentar.
 
 # AMS - Active Model Serializers
+O AMS serve para modificar a resposta do json das ações de um controller. É possível também criar funções em um arquivo como esse, para tratar o valor de um atributo e retorná-lo. 
+
+```ruby
+# Incluir a gem 'active_model_serializers' no arquivo Gemfile.
+
+gem 'active_model_serializers'
+
+# Depois de executar o bundle
+# gerar os serializers
+rails g serializer contact
+
+rails g serializer kind
+```
+
+Após a geração é criado o diretório _serializer_ com os arquivos. A partir de agora toda renderização em json do controller passa pelos seus respectivos serializers.
+
+Com a utilização do AMS a sobreescrita do método _as_json_ deixa de ter responsabilidade no render json. Semelhantemente utiliza-se:
+```ruby
+# serializer/contact_serializer.rb
+def attributes(*args)
+	h = super(*args)
+	h[:birthdate] = object.birthdate.to_time.iso8601
+	h
+end
+```
+
+Para seguir o padrão válido seguir a especificação de jsonapi.org
+
+```ruby
+# Para seguir o padrão da jsonapi.org utilizar o adaptador do :json_api
+# criar o arquivo config/active_model_serializer.rb
+ActiveModel::Serializer.config.adapter = :json_api
+```
+
+#### I18n com AMS
+A especificação da jsonapi.org recomenda a iso8601 para o formato de data. O ruby já tem implementado o _.to_time.iso8601_
+```ruby
+birthdate.to_time.iso8601
+```
+
+#### Associação com AMS
+Para retornar as associações através do serializer transportamos o relacionamento da model para os arquivos serializer.
+```ruby
+# serializer/contact_serializer.rb
+class ContactSerializer < ActiveModel::Serializer
+  attributes :id, :name, :email, :birthdate
+
+  belongs_to :kind
+  has_many :phones
+  has_one :address
+
+  def attributes(*args)
+  	h = super(*args)
+  	h[:birthdate] = object.birthdate.to_time.iso8601
+  end
+end
+```
+
+O relacionamento _belongs_to_ não retorna os dados da associação.
+```ruby
+# adicionar o include no render json
+
+render json: @contact, include: [:kind]
+
+# observe que ele inclui mais um nó no retorno do json porque estamos seguindo a especificação da jsonapi.org
+``` 
+
+
+
+
 
 
 
